@@ -29,6 +29,8 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
 
+
+
 /************************************************
  * opts
  ************************************************/
@@ -44,6 +46,8 @@ int dense_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
 
     return size;
 }
+
+
 
 void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
@@ -68,6 +72,8 @@ void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
     return (void *) opts;
 }
 
+
+
 void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     dense_qp_hpipm_opts *opts = opts_;
@@ -86,12 +92,16 @@ void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *op
     return;
 }
 
+
+
 void dense_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_)
 {
     //    dense_qp_hpipm_opts *opts = (dense_qp_hpipm_opts *)opts_;
 
     return;
 }
+
+
 
 /************************************************
  * memory
@@ -110,6 +120,8 @@ int dense_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_
 
     return size;
 }
+
+
 
 void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
@@ -139,7 +151,15 @@ void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void
     return mem;
 }
 
-int dense_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
+
+
+int dense_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_)\
+{
+	return 0;
+}
+
+
+
 int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
 {
     dense_qp_in *qp_in = qp_in_;
@@ -159,6 +179,23 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     int hpipm_status =
         d_solve_dense_qp_ipm(qp_in, qp_out, opts->hpipm_opts, memory->hpipm_workspace);
 
+int nv = qp_in->dim->nv;
+int ne = qp_in->dim->ne;
+int nb = qp_in->dim->nb;
+int ng = qp_in->dim->ng;
+int ns = qp_in->dim->ns;
+printf("\nhpipm dense\n");
+printf("\nidxs\n");
+int_print_mat(1, ns, qp_in->idxs, 1);
+printf("\nv\n");
+blasfeo_print_tran_dvec(nv+2*ns, qp_out->v, 0);
+printf("\npi\n");
+blasfeo_print_tran_dvec(ne, qp_out->pi, 0);
+printf("\nlam\n");
+blasfeo_print_tran_dvec(2*nb+2*ng+2*ns, qp_out->lam, 0);
+printf("\nt\n");
+blasfeo_print_tran_dvec(2*nb+2*ng+2*ns, qp_out->t, 0);
+
     info->solve_QP_time = acados_toc(&qp_timer);
     info->interface_time = 0;  // there are no conversions for hpipm
     info->total_time = acados_toc(&tot_timer);
@@ -172,6 +209,8 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     if (hpipm_status == 2) acados_status = ACADOS_MINSTEP;
     return acados_status;
 }
+
+
 
 void dense_qp_hpipm_config_initialize_default(void *config_)
 {

@@ -61,6 +61,8 @@
 
 #include "acados_c/dense_qp_interface.h"
 
+
+
 /************************************************
  * opts
  ************************************************/
@@ -72,6 +74,8 @@ int dense_qp_qpoases_opts_calculate_size(void *config_, dense_qp_dims *dims)
 
     return size;
 }
+
+
 
 void *dense_qp_qpoases_opts_assign(void *config_, dense_qp_dims *dims, void *raw_memory)
 {
@@ -86,6 +90,8 @@ void *dense_qp_qpoases_opts_assign(void *config_, dense_qp_dims *dims, void *raw
 
     return (void *) opts;
 }
+
+
 
 void dense_qp_qpoases_opts_initialize_default(void *config_, dense_qp_dims *dims, void *opts_)
 {
@@ -102,12 +108,16 @@ void dense_qp_qpoases_opts_initialize_default(void *config_, dense_qp_dims *dims
     return;
 }
 
+
+
 void dense_qp_qpoases_opts_update(void *config_, dense_qp_dims *dims, void *opts_)
 {
     //    dense_qp_qpoases_opts *opts = (dense_qp_qpoases_opts *)opts_;
 
     return;
 }
+
+
 
 /************************************************
  * memory
@@ -167,6 +177,8 @@ int dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dims *dims, v
 
     return size;
 }
+
+
 
 void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *opts_,
                                      void *raw_memory)
@@ -260,6 +272,8 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     return mem;
 }
 
+
+
 /************************************************
  * workspcae
  ************************************************/
@@ -268,6 +282,8 @@ int dense_qp_qpoases_workspace_calculate_size(void *config_, dense_qp_dims *dims
 {
     return 0;
 }
+
+
 
 /************************************************
  * functions
@@ -328,9 +344,18 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     int nsg = qp_in->dim->nsg;
     int ns  = qp_in->dim->ns;
 
-    int nv2 = nv + 2*ns;
-    int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
-    int nb2 = nb - nsb + 2 * ns;
+//    int nv2 = nv + 2*ns;
+//    int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
+//    int nb2 = nb - nsb + 2 * ns;
+	// extract stacked dense qp size
+    int nv2  = qp_stacked->dim->nv;
+    int ne2  = qp_stacked->dim->ne;
+    int ng2  = qp_stacked->dim->ng;
+    int nb2  = qp_stacked->dim->nb;
+    int nsb2 = qp_stacked->dim->nsb;
+    int nsg2 = qp_stacked->dim->nsg;
+    int ns2  = qp_stacked->dim->ns;
+
 
     // fill in the upper triangular of H in dense_qp
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
@@ -348,9 +373,19 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
     if (ns > 0)
     {
+#if 0
+blasfeo_print_dmat(nv, nv, qp_in->Hv, 0, 0);
+#endif
+
         dense_qp_stack_slacks(qp_in, qp_stacked);
 
-    #if 0
+#if 0
+blasfeo_print_dmat(nv2, nv2, qp_stacked->Hv, 0, 0);
+blasfeo_print_dmat(nv2, ng2, qp_stacked->Ct, 0, 0);
+exit(1);
+#endif
+
+#if 1
         dense_qp_solver_plan plan;
         plan.qp_solver = DENSE_QP_HPIPM;
 
@@ -360,18 +395,34 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         dense_qp_solver *qp_solver = dense_qp_create(config, qp_stacked->dim, opts);
         int acados_return = dense_qp_solve(qp_solver, qp_stacked, out);
 
-        printf("v=\n");
-        blasfeo_print_exp_tran_dvec(nv2, out->v, 0);
+//        printf("v=\n");
+//        blasfeo_print_tran_dvec(nv2, out->v, 0);
 
-        printf("lam=\n");
-        blasfeo_print_exp_tran_dvec(2*qp_stacked->dim->nb + 2*qp_stacked->dim->ng, out->lam, 0);
+//        printf("lam=\n");
+//        blasfeo_print_exp_tran_dvec(2*qp_stacked->dim->nb + 2*qp_stacked->dim->ng, out->lam, 0);
 
-        double res[4];
-        dense_qp_inf_norm_residuals(qp_stacked->dim, qp_stacked, out, res);
-        printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
+//        double res[4];
+//        dense_qp_inf_norm_residuals(qp_stacked->dim, qp_stacked, out, res);
+//        printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
+
+
+		dense_qp_unstack_slacks(out, qp_in, qp_out);
+
+
+
+printf("\nhpipm dense\n");
+printf("\nv\n");
+blasfeo_print_tran_dvec(nv+2*ns, qp_out->v, 0);
+printf("\npi\n");
+blasfeo_print_tran_dvec(ne, qp_out->pi, 0);
+printf("\nlam\n");
+blasfeo_print_tran_dvec(2*nb+2*ng+2*ns, qp_out->lam, 0);
+printf("\nt\n");
+blasfeo_print_tran_dvec(2*nb+2*ng+2*ns, qp_out->t, 0);
+
 
         exit(1);
-    #endif
+#endif
 
         d_cvt_dense_qp_to_rowmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg, d_ug,
                                 NULL, NULL, NULL, NULL, NULL, NULL, NULL);
@@ -638,13 +689,13 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         info->t_computed = 1;
     }
 
-    double res[4];
-    dense_qp_inf_norm_residuals(qp_in->dim, qp_in, qp_out, res);
-    printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
+//    double res[4];
+//    dense_qp_inf_norm_residuals(qp_in->dim, qp_in, qp_out, res);
+//    printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
 
-    printf("status = %d\n", qpoases_status);
+//    printf("status = %d\n", qpoases_status);
 
-#if 1
+#if 0
     int nbd = qp_stacked->dim->nb;
     int ngd = qp_stacked->dim->ng;
     int nvd = qp_stacked->dim->nv;
@@ -683,6 +734,8 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     if (qpoases_status == RET_MAX_NWSR_REACHED) acados_status = ACADOS_MAXITER;
     return acados_status;
 }
+
+
 
 void dense_qp_qpoases_config_initialize_default(void *config_)
 {

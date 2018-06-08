@@ -200,65 +200,24 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, in
 
 
 
-ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN)
+ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims)
 {
 
-	int nbu_ = nu_<nb_ ? nu_ : nb_;
-    int nbx_ = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
+    /************************************************
+    * extract dims
+    ************************************************/
 
-    int nx[N+1];
-#if defined(ELIMINATE_X0)
-    nx[0] = 0;
-#else
-    nx[0] = nx_;
-#endif
-    for (int ii = 1; ii <= N; ii++) {
-        nx[ii] = nx_;
-    }
+	int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *nb = dims->nb;
+	int *ng = dims->ng;
+	int *ns = dims->ns;
 
-    int nu[N+1];
-    for (int ii = 0; ii < N; ii++) {
-        nu[ii] = nu_;
-    }
-    nu[N] = 0;
-
-    int nbu[N+1];
-    for (int ii = 0; ii < N; ii++)
-    {
-        nbu[ii] = nbu_;
-	}
-	nbu[N] = 0;
-
-    int nbx[N+1];
-#if defined(ELIMINATE_X0)
-	nbx[0] = 0;
-#else
-	nbx[0] = nx_;
-#endif
-    for (int ii = 1; ii <= N; ii++)
-    {
-        nbx[ii] = nbx_;
-    }
-
-    int nb[N+1];
-    for (int ii = 0; ii <= N; ii++) {
-        nb[ii] = nbu[ii]+nbx[ii];
-    }
-
-    int ng[N+1];
-    for (int ii = 0; ii < N; ii++) {
-        ng[ii] = ng_;
-    }
-    ng[N] = ngN;
-
-	int ns[N+1];
-	for (int ii = 0; ii <= N; ii++) {
-        ns[ii] = 0;
-    }
-
-//    printf("Test problem: mass-spring system with %d masses and %d controls.\n\n", nx_ / 2, nu_);
-//   printf("MPC problem size: %d states, %d inputs, %d horizon length, %d two-sided box "
-//           "constraints, %d two-sided general constraints.\n\n", nx_, nu_, N, nb_, ng_);
+	int nx_ = nx[1];
+	int nu_ = nu[1];
+	int ng_ = ng[1];
+	int ngN = ng[N];
 
     /************************************************
     * dynamical system
@@ -522,18 +481,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, i
     hug[N] = ugN;
 
 
-    ocp_qp_dims dims;
-
-    dims.N = N;
-    dims.nx = nx;
-    dims.nu = nu;
-    dims.nb = nb;
-    dims.ng = ng;
-    dims.ns = ns;
-    dims.nbu = nbu;
-    dims.nbx = nbx;
-
-    ocp_qp_in *qp_in = ocp_qp_in_create(config, &dims);
+    ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
 
 	d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
 
@@ -669,71 +617,26 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_,
 
 
 
-ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN)
+ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *dims)
 {
 
 	int ii;
 
     /************************************************
-    * dynamical system
+    * extract dims
     ************************************************/
 
-	int nbu_ = nu_<nb_ ? nu_ : nb_;
-    int nbx_ = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
+	int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *nb = dims->nb;
+	int *ng = dims->ng;
+	int *ns = dims->ns;
 
-    int nx[N+1];
-#if defined(ELIMINATE_X0)
-    nx[0] = 0;
-#else
-    nx[0] = nx_;
-#endif
-    for (int ii = 1; ii <= N; ii++) {
-        nx[ii] = nx_;
-    }
-
-    int nu[N+1];
-    for (int ii = 0; ii < N; ii++) {
-        nu[ii] = nu_;
-    }
-    nu[N] = 0;
-
-    int nbu[N+1];
-    for (int ii = 0; ii < N; ii++)
-    {
-        nbu[ii] = nbu_;
-	}
-	nbu[N] = 0;
-
-    int nbx[N+1];
-#if defined(ELIMINATE_X0)
-	nbx[0] = 0;
-#else
-	nbx[0] = nx_;
-#endif
-    for (int ii = 1; ii <= N; ii++)
-    {
-        nbx[ii] = nbx_;
-    }
-
-    int nb[N+1];
-    for (int ii = 0; ii <= N; ii++) {
-        nb[ii] = nbu[ii]+nbx[ii];
-    }
-
-    int ng[N+1];
-    for (int ii = 0; ii < N; ii++) {
-        ng[ii] = ng_;
-    }
-    ng[N] = ngN;
-
-	int ns[N+1];
-	for (int ii = 0; ii <= N; ii++) {
-        ns[ii] = nbx[ii]+ng[ii];
-    }
-
-//    printf("Test problem: mass-spring system with %d masses and %d controls.\n\n", nx_ / 2, nu_);
-//   printf("MPC problem size: %d states, %d inputs, %d horizon length, %d two-sided box "
-//           "constraints, %d two-sided general constraints.\n\n", nx_, nu_, N, nb_, ng_);
+	int nx_ = nx[1];
+	int nu_ = nu[1];
+	int ng_ = ng[1];
+	int ngN = ng[N];
 
     /************************************************
     * dynamical system
@@ -1095,18 +998,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_
 	hd_us[N] = d_usN;
 
 
-    ocp_qp_dims dims;
-
-    dims.N = N;
-    dims.nx = nx;
-    dims.nu = nu;
-    dims.nb = nb;
-    dims.ng = ng;
-    dims.ns = ns;
-    dims.nbu = nbu;
-    dims.nbx = nbx;
-
-    ocp_qp_in *qp_in = ocp_qp_in_create(config, &dims);
+    ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
 
 	d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hZl, hZu, hzl, hzu, hidxs, hd_ls, hd_us, qp_in);
 
