@@ -519,9 +519,9 @@ int main()
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
         // plan->sim_solver_plan[i].sim_solver = ERK;
-		// plan->sim_solver_plan[i].sim_solver = IRK;
+		plan->sim_solver_plan[i].sim_solver = IRK;
 		// plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
-		plan->sim_solver_plan[i].sim_solver = GNSF;
+		// plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
 	for (int i = 0; i <= NN; i++)
@@ -814,23 +814,17 @@ int main()
 			sim_opts[i]->ns = 4;
 			sim_opts[i]->num_steps = 10;
 		}
-		else if (plan->sim_solver_plan[i].sim_solver == IRK)
+		else if (plan->sim_solver_plan[i].sim_solver == IRK || plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
 			sim_opts[i]->ns = 4;
-			sim_opts[i]->num_steps = 1;
-			sim_opts[i]->jac_reuse = true;
+			sim_opts[i]->num_steps = 3;
+			sim_opts[i]->newton_iter = 3;
+			sim_opts[i]->jac_reuse = false;
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
 		{
 			sim_opts[i]->ns = 4;
 			sim_opts[i]->num_steps = 1;
-		}
-		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
-		{
-			sim_opts[i]->ns = 4;
-			sim_opts[i]->num_steps = 1;
-			sim_opts[i]->newton_iter = 1;
-			sim_opts[i]->jac_reuse = true;
 		}
 	}
 
@@ -908,7 +902,7 @@ int main()
     * sqp solve
     ************************************************/
 
-	int nmpc_problems = 40;
+	int nmpc_problems = 4;
 
     int status;
 
