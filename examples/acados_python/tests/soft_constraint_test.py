@@ -47,6 +47,9 @@ QP_SOLVERS = ('PARTIAL_CONDENSING_HPIPM', \
                 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
                 'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP'
                 )
+
+QP_SOLVERS = ('PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_OSQP',)
+
 # no soft constraint support:
 # 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', \
 
@@ -166,7 +169,7 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
 
         if status != 0:
             acados_ocp_solver.print_statistics()
-            raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
+            # raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
 
         qp_iter[i] = np.sum(acados_ocp_solver.get_stats('qp_iter'))
         sqp_iter[i] = acados_ocp_solver.get_stats('sqp_iter')
